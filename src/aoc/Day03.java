@@ -38,6 +38,7 @@ public class Day03 {
             return true;
         }
     }
+
     public static void main(String[] args){
         List<String> data = new ArrayList<>();
         try (final Scanner scanner = new Scanner(new File("data/day03.txt"))) {
@@ -67,7 +68,6 @@ public class Day03 {
                 }
             }
         }
-
 
         //  Part 1: Check the number parts against all the symbols
         int sum = 0;
