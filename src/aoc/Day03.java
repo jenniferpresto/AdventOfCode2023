@@ -10,17 +10,22 @@ import java.util.regex.Pattern;
 public class Day03 {
 
     public static class EnginePart {
-        String value;
-        int start;
-        int end;
-        int row;
+        final String value;
+        final int start;
+        final int end;
+        final int row;
         boolean isPartNumber = false;
+
+        // for * symbols only
+        final List<EnginePart> adjacentPartNumbers;
 
         EnginePart(final String value, final int start, final int row) {
             this.value = value;
             this.start = start;
             this.end = start + value.length() - 1;
             this.row = row;
+
+            this.adjacentPartNumbers = new ArrayList<>();
         }
 
         boolean isAdjacent(EnginePart other) {
@@ -66,15 +71,40 @@ public class Day03 {
 
         //  Part 1: Check the number parts against all the symbols
         int sum = 0;
-        for (EnginePart numberPart : numberParts) {
-            for (EnginePart symbol : symbols) {
+        for (final EnginePart numberPart : numberParts) {
+            for (final EnginePart symbol : symbols) {
                 if (numberPart.isAdjacent(symbol)) {
+                    numberPart.isPartNumber = true;
                     sum += Integer.parseInt(numberPart.value);
                     break;
                 }
             }
         }
 
+        //  Part 2: Finding gear ratios
+        int gearRatioSum = 0;
+        for (final EnginePart symbol : symbols) {
+            if (!symbol.value.equals("*")) {
+                continue;
+            }
+
+            for (final EnginePart numberPart : numberParts) {
+                if (!numberPart.isPartNumber) {
+                    continue;
+                }
+                if (numberPart.isAdjacent(symbol)) {
+                    symbol.adjacentPartNumbers.add(numberPart);
+                }
+            }
+
+            if (symbol.adjacentPartNumbers.size() == 2) {
+                int gearRatio = Integer.parseInt(symbol.adjacentPartNumbers.get(0).value)
+                        * Integer.parseInt(symbol.adjacentPartNumbers.get(1).value);
+                gearRatioSum += gearRatio;
+            }
+        }
+
         System.out.println("Part 1: Sum of all part numbers: " + sum);
+        System.out.println("Part 2: Gear ratio sum: " + gearRatioSum);
     }
 }
