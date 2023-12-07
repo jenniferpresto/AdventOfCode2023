@@ -2,11 +2,12 @@ package aoc;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 public class Day05 {
     public static class Range {
@@ -14,26 +15,51 @@ public class Day05 {
         final long sourceStart;
         final long length;
 
+        final long destEnd;
+        final long sourceEnd;
+
         Range(long destStart, long sourceStart, long length) {
             this.destStart = destStart;
             this.sourceStart = sourceStart;
             this.length = length;
+
+            //  this just makes things less messy
+            this.destEnd = this.destStart + length - 1;
+            this.sourceEnd = this.sourceStart + length - 1;
+        }
+
+        @Override
+        public String toString() {
+            return("D: " + this.destStart + " S: " + this.sourceStart + " L: " + this.length);
         }
     }
     public static class FarmMap {
         final String source;
         final String dest;
         final List<Range> ranges;
+        final List<Range> splitRanges;
 
         FarmMap(String source, String dest) {
             this.source = source;
             this.dest = dest;
             this.ranges = new ArrayList<>();
+            this.splitRanges = new ArrayList<>();
+        }
+
+        @Override
+        public String toString() {
+            String output = source + "-to-" + dest + ":";
+            output += "\n";
+            for (Range range : splitRanges) {
+                output += range + "\n";
+            }
+            return output;
         }
     }
+
     public static void main(String[] args){
         List<String> data = new ArrayList<>();
-        try (final Scanner scanner = new Scanner(new File("data/day05.txt"))) {
+        try (final Scanner scanner = new Scanner(new File("testData/day05.txt"))) {
             while (scanner.hasNext()) {
                 data.add(scanner.nextLine());
             }
@@ -86,6 +112,13 @@ public class Day05 {
             }
         }
         System.out.println("Part 1: Closest location is " + closestLocation);
+
+        //  Part 2
+
+        almanac.get("humidity").splitRanges.addAll(almanac.get("humidity").ranges);
+        sortSplitRangesBySource(almanac.get("humidity"));
+        List<Range> newRanges = splitUpperRanges(almanac.get("temperature").ranges, almanac.get("humidity").splitRanges);
+        int jennifer = 9;
     }
 
     static Long convertSeedToLocation(final Map<String, FarmMap> almanac, Long value, String entry) {
@@ -95,11 +128,74 @@ public class Day05 {
         }
 
         for(Range range : currentMap.ranges) {
-            if (value >= range.sourceStart && value < range.sourceStart + range.length) {
+            if (value >= range.sourceStart && value <= range.sourceEnd) {
                 return convertSeedToLocation(almanac, range.destStart + value - range.sourceStart, currentMap.dest);
             }
         }
 
         return (convertSeedToLocation(almanac, value, currentMap.dest));
+    }
+
+    static void sortSplitRangesByDestination(FarmMap map) {
+        Collections.sort(map.splitRanges, Comparator.comparing(range -> range.destStart));
+    }
+
+    static void sortSplitRangesBySource(FarmMap map) {
+        Collections.sort(map.splitRanges, Comparator.comparing(range -> range.sourceStart));
+    }
+
+    static List<Range> splitUpperRanges(List<Range> upperRanges, List<Range> lowerRanges) {
+        List<Range> newRanges = new ArrayList<>();
+
+        for (Range upperRange : upperRanges) {
+            System.out.println("Upper range: " + upperRange);
+            boolean didSplitRange = false;
+            for (Range lowerRange : lowerRanges) {
+                //  we've sorted the ranges
+                //  we can skip ranges until we get high enough
+                if (upperRange.destEnd < lowerRange.sourceStart) {
+                    System.out.println("Too low: " + lowerRange);
+                    break;
+                }
+
+                //  upper dest range fully inside lower source range
+                //  no need to split
+                if (upperRange.destStart >= lowerRange.sourceStart && upperRange.destEnd <= lowerRange.sourceEnd) {
+                    newRanges.add(upperRange);
+                    System.out.println("Fits inside: " + lowerRanges);
+                    break;
+                }
+
+                //  upper dest range starts below within lower source range but ends within it
+                if (upperRange.destStart < lowerRange.sourceStart && upperRange.destEnd >= lowerRange.sourceStart) {
+                    final long newLength = lowerRange.sourceStart - upperRange.destStart;
+                    final Range first = new Range(upperRange.destStart, upperRange.sourceStart, newLength);
+                    final Range second = new Range(lowerRange.sourceStart, upperRange.sourceStart + newLength, upperRange.length - newLength);
+                    newRanges.add(first);
+                    newRanges.add(second);
+                    System.out.println("Splitting: " + lowerRange);
+                    didSplitRange = true;
+                    break;
+                }
+
+                //  upper dest range starts within lower source range but ends beyond it
+                //  need to split
+                if (upperRange.destStart >= lowerRange.sourceStart && upperRange.destEnd > lowerRange.sourceEnd) {
+                    System.out.println("Now we have to do something: " + lowerRange);
+                    final long newLength = lowerRange.sourceEnd - upperRange.destEnd;
+                    Range first = new Range(upperRange.destStart, upperRange.sourceStart, newLength);
+                    Range second = new Range(lowerRange.sourceEnd + 1, upperRange.sourceStart + newLength, upperRange.length - newLength);
+                    newRanges.add(first);
+                    newRanges.add(second);
+                    didSplitRange = true;
+                    break;
+                }
+            }
+            if (!didSplitRange) {
+                System.out.println("No match; keep as is");
+                newRanges.add(upperRange);
+            }
+        }
+        return newRanges;
     }
 }
