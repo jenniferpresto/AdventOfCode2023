@@ -360,16 +360,24 @@ public class Day05 {
             if (upperRanges.size() - 1 < upperIdx) {
                 //  add a range corresponding to lower range
                 Range lowerRangeToDuplicate = lowerRanges.get(lowerIdx);
-                newSplitRanges.add(new Range(lowerRangeToDuplicate.sourceStart, lowerRangeToDuplicate.sourceStart, lowerRangeToDuplicate.length));
+                if (currentValue <= lowerRangeToDuplicate.sourceStart) {
+                    newSplitRanges.add(new Range(lowerRangeToDuplicate.sourceStart, lowerRangeToDuplicate.sourceStart, lowerRangeToDuplicate.length));
+                }
                 lowerIdx++;
+                currentValue = lowerRangeToDuplicate.sourceEnd + 1;
                 continue;
             }
 
             if (lowerRanges.size() - 1 < lowerIdx) {
                 //  duplicate upper range
                 Range upperRangeToDuplicate = upperRanges.get(upperIdx);
-                newSplitRanges.add(upperRangeToDuplicate);
+                if (currentValue <= upperRangeToDuplicate.destStart) {
+                    newSplitRanges.add(upperRangeToDuplicate);
+                } else {
+                    newSplitRanges.add(new Range(currentValue, currentValue - (upperRangeToDuplicate.destStart - upperRangeToDuplicate.sourceStart), upperRangeToDuplicate.destEnd - currentValue + 1));
+                }
                 upperIdx++;
+                currentValue = upperRangeToDuplicate.destEnd + 1;
                 continue;
             }
 
@@ -423,7 +431,7 @@ public class Day05 {
 
                 //  lower ends first
                 else if (currentUpperRange.destEnd > currentLowerRange.sourceEnd) {
-                    newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, currentLowerRange.sourceEnd - currentValue));
+                    newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, currentLowerRange.sourceEnd - currentValue + 1));
                     lowerIdx++;
                     currentValue = currentLowerRange.sourceEnd + 1;
                     continue;
@@ -431,7 +439,7 @@ public class Day05 {
             }
             //  current value within upper range
             else if (currentUpperRange.valueIsWithinDestination(currentValue)) {
-                newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, currentLowerRange.sourceStart - 1 - currentValue));
+                newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, currentLowerRange.sourceStart - currentValue));
                 currentValue = currentLowerRange.sourceStart;
                 continue;
             }
