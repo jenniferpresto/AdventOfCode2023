@@ -39,3 +39,11 @@ apples-to-oranges map:
 oranges-to-grapes map:
 2 5 2
 5 7 3
+
+grapes-to-tomatoes map:
+2 1 13
+
+tomatoes-to-onions map:
+0 0 5
+7 7 3
+17 17 3
