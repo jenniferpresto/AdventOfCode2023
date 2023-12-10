@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
+import javax.sound.midi.SysexMessage;
 
 public class Day05 {
     public static class Range {
@@ -90,6 +91,10 @@ public class Day05 {
             this.splitRanges = new ArrayList<>();
         }
 
+        public String getName() {
+            return this.source + "-to-" + this.dest;
+        }
+
         @Override
         public String toString() {
             String output = source + "-to-" + dest + ":";
@@ -103,7 +108,7 @@ public class Day05 {
 
     public static void main(String[] args) {
         List<String> data = new ArrayList<>();
-        try (final Scanner scanner = new Scanner(new File("data/day05.txt"))) {
+        try (final Scanner scanner = new Scanner(new File("testData/day05.txt"))) {
             while (scanner.hasNext()) {
                 data.add(scanner.nextLine());
             }
@@ -177,12 +182,12 @@ public class Day05 {
         almanacBySource.put("elf", seedMap);
         almanacByDest.put("seed", seedMap);
 
-//        FarmMap upperTestMap = almanacBySource.get("grapes");
-//        FarmMap lowerTestMap = almanacBySource.get("tomatoes");
-//        lowerTestMap.splitRanges.addAll(lowerTestMap.ranges);
-//        List<Range> newSplitRanges = splitUpperRangesBasedOnLowerRangesNonRecursively(upperTestMap, lowerTestMap);
-//        upperTestMap.splitRanges.addAll(newSplitRanges);
-//        int jennifer = 9;
+        FarmMap upperTestMap = almanacBySource.get("grapes");
+        FarmMap lowerTestMap = almanacBySource.get("tomatoes");
+        lowerTestMap.splitRanges.addAll(lowerTestMap.ranges);
+        List<Range> newSplitRanges = combineRanges(upperTestMap, lowerTestMap);
+        upperTestMap.splitRanges.addAll(newSplitRanges);
+        int jennifer = 9;
 
         //  Fill in the range gaps in all the maps
 //        long highestMappedValue = 0;
@@ -211,18 +216,18 @@ public class Day05 {
 
         //  ******************************************
         //  These don't need to be split, so go ahead and add all the location's ranges to its split ranges
-        almanacByDest.get("location").splitRanges.addAll(almanacByDest.get("location").ranges);
-        String resourceConnection = "humidity";
-
-        while(true) {
-            FarmMap lowerMap = almanacBySource.get(resourceConnection);
-            FarmMap upperMap = almanacByDest.get(resourceConnection);
-            upperMap.splitRanges.addAll(splitUpperRangesBasedOnLowerRangesNonRecursively(upperMap, lowerMap));
-            resourceConnection = upperMap.source;
-            if (resourceConnection.equals("elf")) {
-                break;
-            }
-        }
+//        almanacByDest.get("location").splitRanges.addAll(almanacByDest.get("location").ranges);
+//        String resourceConnection = "humidity";
+//
+//        while(true) {
+//            FarmMap lowerMap = almanacBySource.get(resourceConnection);
+//            FarmMap upperMap = almanacByDest.get(resourceConnection);
+//            upperMap.splitRanges.addAll(splitUpperRangesBasedOnLowerRangesNonRecursively(upperMap, lowerMap));
+//            resourceConnection = upperMap.source;
+//            if (resourceConnection.equals("elf")) {
+//                break;
+//            }
+//        }
         //  ********************************************************
 
 
@@ -252,18 +257,18 @@ public class Day05 {
 //
 
         //  **************************************
-        long lowestComplicatedSeedLocation = Long.MAX_VALUE;
-        for(Range range : seedMap.splitRanges) {
-            long beginningSeed = range.sourceStart;
-            if (sourceIsWithinOriginalRanges(beginningSeed, seedMap)) {
-                Long location = convertSeedToLocation(almanacBySource, beginningSeed, "seed");
-                System.out.println("Seed: " + beginningSeed + " maps to " + location );
-                if (location < lowestComplicatedSeedLocation) {
-                    lowestComplicatedSeedLocation = location;
-                }
-            }
-        }
-        System.out.println("Lowest seed in this annoying complicated problem is: " + lowestComplicatedSeedLocation);
+//        long lowestComplicatedSeedLocation = Long.MAX_VALUE;
+//        for(Range range : seedMap.splitRanges) {
+//            long beginningSeed = range.sourceStart;
+//            if (sourceIsWithinOriginalRanges(beginningSeed, seedMap)) {
+//                Long location = convertSeedToLocation(almanacBySource, beginningSeed, "seed");
+//                System.out.println("Seed: " + beginningSeed + " maps to " + location );
+//                if (location < lowestComplicatedSeedLocation) {
+//                    lowestComplicatedSeedLocation = location;
+//                }
+//            }
+//        }
+//        System.out.println("Lowest seed in this annoying complicated problem is: " + lowestComplicatedSeedLocation);
         //  **************************************
 
 
@@ -358,6 +363,165 @@ public class Day05 {
             newUpperRanges.add(upperRange);
             rangeSet.add(upperRange);
         }
+    }
+
+    static List<Range> combineRanges(FarmMap upper, FarmMap lower) {
+        sortRangesByDestination(upper);
+        sortRangesBySource(lower);
+        int upperIdx = 0;
+        int lowerIdx = 0;
+        long currentValue = 0L;
+        List<Range> upperRanges = upper.ranges;
+        List<Range> lowerRanges = lower.splitRanges;
+
+        List<Range> newSplitRanges = new ArrayList<>();
+
+        while(true) {
+            if (upperRanges.size() - 1 < upperIdx && lowerRanges.size() - 1 < lowerIdx) {
+                System.out.println("We're done: upperIdx=" + upperIdx + ", lowerIdx=" + lowerIdx);
+                System.out.println("Upper: " + upper.getName());
+                System.out.println("Lower: " + lower.getName());
+                break;
+            }
+
+            //  we have only lower ranges left
+            if (upperRanges.size() - 1 < upperIdx) {
+                //  add a range corresponding to lower range
+                Range lowerRangeToDuplicate = lowerRanges.get(lowerIdx);
+
+                //  include the remainer of the current lower range, if current value is within it
+                if (lowerRangeToDuplicate.valueIsWithinSource(currentValue)) {
+                    newSplitRanges.add(new Range(currentValue, currentValue, lowerRangeToDuplicate.sourceEnd - currentValue + 1));
+                    lowerIdx++;
+                }
+
+                //  then add the rest
+                for (int i = lowerIdx; i < lowerRanges.size(); i++) {
+                    newSplitRanges.add(new Range(lowerRanges.get(i).sourceStart, lowerRanges.get(i).sourceStart, lowerRanges.get(i).length));
+                }
+                System.out.println("Just added remaining lower ranges");
+                break;
+            }
+
+            //  we have only upper ranges left
+            if (lowerRanges.size() - 1 < lowerIdx) {
+                //  duplicate upper range
+                Range upperRangeToDuplicate = upperRanges.get(upperIdx);
+
+
+                //  include the remainer of the current upper range, if current value is within it
+                if (upperRangeToDuplicate.valueIsWithinDestination(currentValue)) {
+                    newSplitRanges.add(new Range(currentValue, currentValue - (upperRangeToDuplicate.destStart - upperRangeToDuplicate.sourceStart), upperRangeToDuplicate.destEnd - currentValue + 1));
+                    upperIdx++;
+                }
+
+                //  then add the rest
+                for (int i = upperIdx; i < upperRanges.size(); i++) {
+                    newSplitRanges.add(upperRanges.get(i));
+                }
+                break;
+            }
+
+
+            Range currentUpperRange = upperRanges.get(upperIdx);
+            Range currentLowerRange = lowerRanges.get(lowerIdx);
+
+            if (!currentUpperRange.valueIsWithinDestination(currentValue) && !currentLowerRange.valueIsWithinSource(currentValue)) {
+                long lowestNextRangeStart = Math.min(currentUpperRange.destStart, currentLowerRange.sourceStart);
+                currentValue = lowestNextRangeStart;
+            }
+
+//            long earliestRangeStart = Math.min(currentUpperRange.destStart, currentLowerRange.sourceStart);
+//            if (currentValue < earliestRangeStart) {
+//            }
+
+            long destSourceDiff = currentUpperRange.destStart - currentUpperRange.sourceStart;
+//            Long nextLowestPoint = getNextLowestPoint(currentUpperRange, currentLowerRange, currentValue);
+//            if (nextLowestPoint == null) {
+//                System.out.println("Unexpected null value here");
+//                continue;
+//            }
+            long nextLowestPoint;
+            if (currentUpperRange.valueIsWithinDestination(currentValue)) {
+                if (currentLowerRange.valueIsWithinSource(currentValue)) {
+                    nextLowestPoint = Math.min(currentUpperRange.destEnd, currentLowerRange.sourceEnd);
+                } else {
+                    nextLowestPoint = Math.min(currentUpperRange.destEnd, currentLowerRange.sourceStart);
+                }
+
+                if (nextLowestPoint == currentUpperRange.destEnd) {
+                    newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, currentUpperRange.destEnd - currentValue + 1));
+                    upperIdx++;
+                    if (nextLowestPoint == currentLowerRange.sourceEnd) {
+                        lowerIdx++;
+                    }
+                    currentValue = currentUpperRange.destEnd + 1;
+                    continue;
+                } else if (nextLowestPoint == currentLowerRange.sourceStart) {
+                    if (currentValue == currentLowerRange.sourceEnd) {
+                        newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, 1));
+                        System.out.println("Creating a range with length 1: current value in both");
+                        lowerIdx++;
+                        currentValue++;
+                    } else {
+                        newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, currentLowerRange.sourceStart - currentValue));
+                        currentValue = currentLowerRange.sourceStart;
+                    }
+                    continue;
+                } else if (nextLowestPoint == currentLowerRange.sourceEnd) {
+                    newSplitRanges.add(new Range(currentValue, currentValue - destSourceDiff, currentLowerRange.sourceEnd - currentValue + 1));
+                    lowerIdx++;
+                    currentValue = currentLowerRange.sourceEnd + 1;
+                    continue;
+                } else {
+                    System.out.println("Something went wrong, starting point within upper range");
+                    continue;
+                }
+            } else if (currentLowerRange.valueIsWithinSource(currentValue)) {
+                nextLowestPoint = Math.min(currentUpperRange.destStart, currentLowerRange.destEnd);
+                if (nextLowestPoint == currentUpperRange.destStart) {
+                    newSplitRanges.add(new Range(currentValue, currentValue, currentUpperRange.destStart - currentValue));
+                    currentValue = currentUpperRange.destStart;
+                    continue;
+                } else if (nextLowestPoint == currentLowerRange.sourceEnd) {
+                    System.out.println("Creating a range with length 1; current value in lower only");
+                    newSplitRanges.add(new Range(currentValue, currentValue, 1));
+                    currentValue++;
+                    lowerIdx++;
+                    continue;
+                } else if (nextLowestPoint == currentUpperRange.destEnd) {
+                    System.out.println("Something is wrong: this shouldn't happen");
+                } else {
+                    System.out.println("Something went wrong, starting point within lower range");
+                }
+            } else {
+                System.out.println("Something went wrong, value is in neither range");
+            }
+        }
+
+        return newSplitRanges;
+    }
+
+    static Long getNextLowestPoint(Range upperRange, Range lowerRange, long currentValue) {
+        List<Long> possibilities = new ArrayList<>();
+        if (upperRange.destStart > currentValue) {
+            possibilities.add(upperRange.destStart);
+        }
+        if (upperRange.destEnd > currentValue) {
+            possibilities.add(upperRange.destEnd);
+        }
+        if (lowerRange.sourceStart > currentValue) {
+            possibilities.add(lowerRange.sourceStart);
+        }
+        if (lowerRange.sourceEnd > currentValue) {
+            possibilities.add(lowerRange.sourceEnd);
+        }
+        if (possibilities.isEmpty()) {
+            System.out.println("Ran out of possibilities");
+            return null;
+        }
+        Collections.sort(possibilities);
+        return possibilities.get(0);
     }
 
     static List<Range> splitUpperRangesBasedOnLowerRangesNonRecursively(FarmMap upper, FarmMap lower) {
