@@ -11,7 +11,7 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class Day07 {
-    public static final boolean IS_PART_TWO = true;
+    public static boolean IS_PART_TWO = false;
 
     public enum HandType {
         FIVE_OF_A_KIND(6),
@@ -151,9 +151,7 @@ public class Day07 {
             hands.get(i).rank = i + 1;
             totalWinnings += hands.get(i).bid * (i + 1);
         }
-        System.out.println("Part 1: Total winnings: " + totalWinnings);
-
-        int jennifer = 9;
+        System.out.println("Total winnings: " + totalWinnings);
     }
 
     public static HandType getHandType(String cards) {
@@ -206,7 +204,6 @@ public class Day07 {
             return HandType.THREE_OF_A_KIND;
         }
         if (mostFrequentCard.getValue().equals(2)) {
-            Entry<Character, Integer> secondCardGroup = sortedCardsByFrequency.get(1);
             if (sortedCardsByFrequency.get(1).getValue().equals(2)) {
                 return HandType.TWO_PAIR;
             }
