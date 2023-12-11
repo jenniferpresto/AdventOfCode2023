@@ -1,3 +1,5 @@
+package aoc;
+
 import java.io.File;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
