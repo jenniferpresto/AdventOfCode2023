@@ -28,23 +28,7 @@ public class Day08 {
         }
 
         //  Part 1
-        String currentNode = "AAA";
-        int idx = 0;
-        long numSteps = 0L;
-        while(true) {
-            numSteps++;
-            char direction = directions.charAt(idx);
-            if(direction == 'L') {
-                currentNode = nodes.get(currentNode).getKey();
-            } else {
-                currentNode = nodes.get(currentNode).getValue();
-            }
-            if (currentNode.equals("ZZZ")) {
-                break;
-            }
-            idx = (idx + 1) % directions.length();
-        }
-        System.out.println("Num steps: " + numSteps);
+        System.out.println("Num steps for Part 1: " + getNumSteps(nodes, directions, "AAA", false));
 
         //  Part 2
         List<String> aNodes = new ArrayList<>();
@@ -57,22 +41,7 @@ public class Day08 {
 
         //  Get num steps for each A node
         for (int i = 0; i < aNodes.size(); i++) {
-            currentNode = aNodes.get(i);
-            numSteps = 0L;
-            idx = 0;
-            while(true) {
-                numSteps++;
-                char direction = directions.charAt(idx);
-                if (direction == 'L') {
-                    currentNode = nodes.get(currentNode).getKey();
-                } else {
-                    currentNode = nodes.get(currentNode).getValue();
-                }
-                if (currentNode.endsWith("Z")) {
-                    break;
-                }
-                idx = (idx + 1) % directions.length();
-            }
+            long numSteps = getNumSteps(nodes, directions, aNodes.get(i), true);
             aNodeSteps.add(numSteps);
             System.out.println("Num steps for node " + i + ", " + aNodes.get(i) + ": " + numSteps);
         }
@@ -84,6 +53,31 @@ public class Day08 {
         }
 
         System.out.println("Part 2: Smallest number of steps: " + lcm);
+    }
+
+    static long getNumSteps(Map<String, Map.Entry<String, String>> nodes, String directions, String startingNode, boolean isGhost) {
+        String currentNode = startingNode;
+        if (nodes.get(currentNode) == null) {
+            System.out.println("Annoyingly, the test data for parts 1 and 2 are different");
+            return 0L;
+        }
+        long numSteps = 0L;
+        int idx = 0;
+        while(true) {
+            numSteps++;
+            char direction = directions.charAt(idx);
+            if (direction == 'L') {
+                currentNode = nodes.get(currentNode).getKey();
+            } else {
+                currentNode = nodes.get(currentNode).getValue();
+            }
+            if ((isGhost && currentNode.endsWith("Z")) ||
+                currentNode.equals("ZZZ")) {
+                break;
+            }
+            idx = (idx + 1) % directions.length();
+        }
+        return numSteps;
     }
 
     static long getLeastCommonMultiple(long a, long b) {
