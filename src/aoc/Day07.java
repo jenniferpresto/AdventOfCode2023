@@ -2,8 +2,6 @@ package aoc;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +11,8 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class Day07 {
+    public static final boolean IS_PART_TWO = true;
+
     public enum HandType {
         FIVE_OF_A_KIND(6),
         FOUR_OF_A_KIND(5),
@@ -76,7 +76,17 @@ public class Day07 {
                 if (thisCard == thatCard) {
                     continue;
                 }
-                if (cardTypes.get(thisCard) > cardTypes.get(thatCard)) {
+                int thisCardValue = cardTypes.get(thisCard);
+                int thatCardValue = cardTypes.get(thatCard);
+                if (IS_PART_TWO) {
+                    if (thisCard == 'J') {
+                        thisCardValue = 1;
+                    }
+                    if (thatCard == 'J') {
+                        thatCardValue = 1;
+                    }
+                }
+                if (thisCardValue > thatCardValue) {
                     return true;
                 }
                 return false;
@@ -159,6 +169,28 @@ public class Day07 {
         List<Map.Entry<Character, Integer>> sortedCardsByFrequency = sortedCards.entrySet().stream()
                 .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
                 .collect(Collectors.toList());
+
+        if (IS_PART_TWO) {
+            //  if we have jacks, treat them as the highest-frequency card to maximize hand value
+            if (sortedCards.containsKey('J')) {
+                if (sortedCardsByFrequency.get(0).getKey() == 'J') {
+                    if (sortedCardsByFrequency.size() > 1) {
+                        sortedCardsByFrequency.get(1).setValue(sortedCardsByFrequency.get(1).getValue() + sortedCardsByFrequency.get(0).getValue());
+                        sortedCardsByFrequency.remove(0);
+                    }
+                } else {
+                    sortedCardsByFrequency.get(0).setValue(sortedCardsByFrequency.get(0).getValue() + sortedCards.get('J'));
+                    int jIdx = 1;
+                    for (int i = 1; i < sortedCardsByFrequency.size(); i++) {
+                        if (sortedCardsByFrequency.get(i).getKey() == 'J') {
+                            jIdx = i;
+                            break;
+                        }
+                    }
+                    sortedCardsByFrequency.remove(jIdx);
+                }
+            }
+        }
 
         Entry<Character, Integer> mostFrequentCard = sortedCardsByFrequency.get(0);
         if (mostFrequentCard.getValue().equals(5)) {
