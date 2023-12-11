@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
 
 public class Day08 {
@@ -32,60 +31,68 @@ public class Day08 {
         String currentNode = "AAA";
         int idx = 0;
         long numSteps = 0L;
-//        while(true) {
-//            numSteps++;
-//            char direction = directions.charAt(idx);
-//            if(direction == 'L') {
-//                currentNode = nodes.get(currentNode).getKey();
-//            } else {
-//                currentNode = nodes.get(currentNode).getValue();
-//            }
-//            if (currentNode.equals("ZZZ")) {
-//                break;
-//            }
-//            idx = (idx + 1) % directions.length();
-//        }
-//        System.out.println("Num steps: " + numSteps);
-
-        //  Part 2
-
-        List<List<String>> allPaths = new ArrayList<>();
-        List<String> lastNodeInPaths = new ArrayList<>();
-        for (Map.Entry<String, Map.Entry<String, String>> node : nodes.entrySet()) {
-            if (node.getKey().endsWith("A")) {
-                List<String> path = new ArrayList<>();
-                path.add(node.getKey());
-                allPaths.add(path);
-                lastNodeInPaths.add(node.getKey());
-            }
-        }
-
-        numSteps = 0L;
-        idx = 0;
         while(true) {
             numSteps++;
-            boolean allZ = true;
-            for (int i = 0; i < allPaths.size(); i++) {
-                String lastNode = allPaths.get(i).getLast();
-                String nextNode = "";
-                char direction = directions.charAt(idx);
-                if (direction == 'L') {
-                    nextNode = nodes.get(lastNode).getKey();
-                    allPaths.get(i).add(nextNode);
-                } else {
-                    nextNode = nodes.get(lastNode).getValue();
-                    allPaths.get(i).add(nextNode);
-                }
-                if (!nextNode.endsWith("Z")) {
-                    allZ = false;
-                }
+            char direction = directions.charAt(idx);
+            if(direction == 'L') {
+                currentNode = nodes.get(currentNode).getKey();
+            } else {
+                currentNode = nodes.get(currentNode).getValue();
             }
-            if (allZ) {
+            if (currentNode.equals("ZZZ")) {
                 break;
             }
             idx = (idx + 1) % directions.length();
         }
         System.out.println("Num steps: " + numSteps);
-        int jennifer = 9;
+
+        //  Part 2
+        List<String> aNodes = new ArrayList<>();
+        List<Long> aNodeSteps = new ArrayList<>();
+        for (Map.Entry<String, Map.Entry<String, String>> node : nodes.entrySet()) {
+            if (node.getKey().endsWith("A")) {
+                aNodes.add(node.getKey());
+            }
+        }
+
+        //  Get num steps for each A node
+        for (int i = 0; i < aNodes.size(); i++) {
+            currentNode = aNodes.get(i);
+            numSteps = 0L;
+            idx = 0;
+            while(true) {
+                numSteps++;
+                char direction = directions.charAt(idx);
+                if (direction == 'L') {
+                    currentNode = nodes.get(currentNode).getKey();
+                } else {
+                    currentNode = nodes.get(currentNode).getValue();
+                }
+                if (currentNode.endsWith("Z")) {
+                    break;
+                }
+                idx = (idx + 1) % directions.length();
+            }
+            aNodeSteps.add(numSteps);
+            System.out.println("Num steps for node " + i + ", " + aNodes.get(i) + ": " + numSteps);
+        }
+
+        //  Get least common multiple of all those
+        long lcm = aNodeSteps.get(0);
+        for (int i = 1; i < aNodeSteps.size(); i++) {
+            lcm = getLeastCommonMultiple(lcm, aNodeSteps.get(i));
+        }
+
+        System.out.println("Part 2: Smallest number of steps: " + lcm);
+    }
+
+    static long getLeastCommonMultiple(long a, long b) {
+        long higher = Math.max(a, b);
+        long lower = Math.min(a, b);
+        long lcm = higher;
+        while (lcm % lower != 0) {
+            lcm += higher;
+        }
+        return lcm;
     }
 }
