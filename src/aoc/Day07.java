@@ -11,7 +11,7 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class Day07 {
-    public static boolean IS_PART_TWO = false;
+    public static final boolean IS_PART_TWO = false;
 
     public enum HandType {
         FIVE_OF_A_KIND(6),
