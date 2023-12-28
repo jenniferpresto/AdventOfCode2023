@@ -32,58 +32,58 @@ public class Day11 {
             return;
         }
 
-//        //  Part 1: Expand the universe
-//        List<String> expandedUniverse = new ArrayList<>();
-//
-//        //  expand rows
-//        for (String line : data) {
-//            expandedUniverse.add(line);
-//            if (!line.contains("#")) {
-//                expandedUniverse.add(line);
-//            }
-//        }
-//        int charIdx = 0;
-//        while(true) {
-//            boolean isClear = true;
-//            for (String s : expandedUniverse) {
-//                if (s.charAt(charIdx) == '#') {
-//                    isClear = false;
-//                    break;
-//                }
-//            }
-//            if (isClear) {
-//                for (int y = 0; y < expandedUniverse.size(); y++) {
-//                    String newRow = addSpaceAtIdx(expandedUniverse.get(y), charIdx);
-//                    expandedUniverse.set(y, newRow);
-//                }
-//                charIdx++;
-//            }
-//            charIdx++;
-//            if (charIdx > expandedUniverse.get(0).length() - 1) {
-//                break;
-//            }
-//        }
-//
-//        //  collect the galaxies
-//        List<Galaxy> galaxies = new ArrayList<>();
-//        for (int x = 0; x < expandedUniverse.get(0).length(); x++) {
-//            for (int y = 0; y < expandedUniverse.size(); y++) {
-//                if (expandedUniverse.get(y).charAt(x) == '#') {
-//                    Galaxy galaxy = new Galaxy(x, y);
-//                    galaxies.add(galaxy);
-//                }
-//            }
-//        }
-//
-//        long sumOfDistances = 0;
-//        for (int i = 0; i < galaxies.size(); i++) {
-//            for (int j = i + 1; j < galaxies.size(); j++) {
-//                long distance = galaxies.get(i).getDistance(galaxies.get(j));
-//                sumOfDistances += distance;
-//            }
-//        }
-//
-//        System.out.println("Part 1: Sum of all distances: " + sumOfDistances);
+        //  Part 1: Expand the universe
+        List<String> expandedUniverse = new ArrayList<>();
+
+        //  expand rows
+        for (String line : data) {
+            expandedUniverse.add(line);
+            if (!line.contains("#")) {
+                expandedUniverse.add(line);
+            }
+        }
+        int charIdx = 0;
+        while(true) {
+            boolean isClear = true;
+            for (String s : expandedUniverse) {
+                if (s.charAt(charIdx) == '#') {
+                    isClear = false;
+                    break;
+                }
+            }
+            if (isClear) {
+                for (int y = 0; y < expandedUniverse.size(); y++) {
+                    String newRow = addSpaceAtIdx(expandedUniverse.get(y), charIdx);
+                    expandedUniverse.set(y, newRow);
+                }
+                charIdx++;
+            }
+            charIdx++;
+            if (charIdx > expandedUniverse.get(0).length() - 1) {
+                break;
+            }
+        }
+
+        //  collect the galaxies
+        List<Galaxy> galaxies = new ArrayList<>();
+        for (int x = 0; x < expandedUniverse.get(0).length(); x++) {
+            for (int y = 0; y < expandedUniverse.size(); y++) {
+                if (expandedUniverse.get(y).charAt(x) == '#') {
+                    Galaxy galaxy = new Galaxy(x, y);
+                    galaxies.add(galaxy);
+                }
+            }
+        }
+
+        long sumOfDistances = 0;
+        for (int i = 0; i < galaxies.size(); i++) {
+            for (int j = i + 1; j < galaxies.size(); j++) {
+                long distance = galaxies.get(i).getDistance(galaxies.get(j));
+                sumOfDistances += distance;
+            }
+        }
+
+        System.out.println("Part 1: Sum of all distances: " + sumOfDistances);
 
         //  Part 2: Just keep track of where universe expands
         Set<Integer> expandedColumns = new HashSet<>();
@@ -142,11 +142,6 @@ public class Day11 {
         }
 
         System.out.println("Part 2: Sum of all expanded distances: " + sumOfExpandedDistances);
-
-
-        int jennifer = 9;
-
-
     }
 
     static String addSpaceAtIdx(String original, int position) {
